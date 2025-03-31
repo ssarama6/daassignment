@@ -41,10 +41,16 @@ category_selected = st.selectbox("Select a Category", df['Category'].unique())
 
 #2
 filtered_df = df[df['Category'] == category_selected]
-subcategories = filtered_df['Sub-Category'].unique()
-subcategories_selected = st.multiselect("Select Sub-Category", subcategories, default=subcategories)
 
-final_selection = filtered_df[filtered_df['Sub-Category'].isin(subcategories_selected)]
+if not filtered_df.empty and 'Sub-Category' in filtered_df.columns:
+    subcategories = filtered_df['Sub-Category'].dropna().unique()
+    subcategories_selected = st.multiselect("Select Sub-Category", subcategories, default=subcategories)
+    
+    final_selection = filtered_df[filtered_df['Sub-Category'].isin(subcategories_selected)]
+else:
+    st.warning("No sub-categories found for the selected category.")
+    final_selection = pd.DataFrame() 
+
 
 #3
 if not final_selection.empty:
