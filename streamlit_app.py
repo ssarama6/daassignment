@@ -12,20 +12,17 @@ st.dataframe(df)
 # This bar chart will not have solid bars--but lines--because the detail data is being graphed independently
 st.bar_chart(df, x="Category", y="Sales")
 
-# Now let's do the same graph where we do the aggregation first in Pandas... (this results in a chart with solid bars)
+# Aggregated bar chart
 st.dataframe(df.groupby("Category").sum())
-# Using as_index=False here preserves the Category as a column.  If we exclude that, Category would become the datafram index and we would need to use x=None to tell bar_chart to use the index
 st.bar_chart(df.groupby("Category", as_index=False).sum(), x="Category", y="Sales", color="#04f")
 
-# Aggregating by time
-# Here we ensure Order_Date is in datetime format, then set is as an index to our dataframe
+# Convert Order_Date and set index
 df["Order_Date"] = pd.to_datetime(df["Order_Date"])
-# Here the Grouper is using our newly set index to group by Month ('M')
-sales_by_month_subcat = subcat_df.set_index("Order_Date")[['Sales']].groupby(pd.Grouper(freq='M')).sum()
+df.set_index('Order_Date', inplace=True)
 
+# Aggregate sales by month
+sales_by_month = df.filter(items=['Sales']).groupby(pd.Grouper(freq='M')).sum()
 st.dataframe(sales_by_month)
-
-# Here the grouped months are the index and automatically used for the x axis
 st.line_chart(sales_by_month, y="Sales")
 
 # Section for user additions
