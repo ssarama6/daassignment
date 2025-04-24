@@ -28,34 +28,48 @@ st.dataframe(sales_by_month)
 # Here the grouped months are the index and automatically used for the x axis
 st.line_chart(sales_by_month, y="Sales")
 
+# Section for user additions
+st.write("## Your additions")
+st.write("### (1) add a drop down for Category (https://docs.streamlit.io/library/api-reference/widgets/st.selectbox)")
+
 # (1) Dropdown for Category
-category = st.selectbox("Select a Category", df['Category'].unique())
+categories = df['Category'].unique().tolist()
+selected_category = st.selectbox("Select a Category", categories)
 
-# (2) Multi-select for Sub_Category within selected Category
-filtered_df = df[df['Category'] == category]
-sub_categories = st.multiselect("Select Sub-Categories", filtered_df['Sub-Category'].unique())
+# (2) Multiselect for Sub_Category in selected Category
+st.write("### (2) Add a multi-select for Sub_Category in the selected Category")
+df1 = df[df['Category'] == selected_category]
+subcategories = df1['Sub_Category'].unique()
+selected_subcategories = st.multiselect("Select Subcategories", subcategories)
 
-if sub_categories:
-    subcat_df = filtered_df[filtered_df['Sub-Category'].isin(sub_categories)]
+# (3) Line chart of sales by month for selected subcategories (summed as one line)
+st.write("### (3) Show a line chart of sales for the selected items in (2)")
+if selected_subcategories:
+    df2 = df1[df1['Sub_Category'].isin(selected_subcategories)]
+    sales_by_month1 = df2.groupby(pd.Grouper(freq='M'))['Sales'].sum()
+    st.line_chart(sales_by_month1)
 
-    # (3) Line chart of sales for selected Sub-Categories
-    sales_by_month_subcat = subcat_df[['Sales']].groupby(pd.Grouper(freq='M')).sum()
-    st.line_chart(sales_by_month_subcat, y="Sales")
-
-    # (4) Metrics: total sales, total profit, profit margin (%)
-    total_sales = subcat_df['Sales'].sum()
-    total_profit = subcat_df['Profit'].sum()
-    profit_margin = (total_profit / total_sales) * 100 if total_sales != 0 else 0
-
-    # (5) Delta: compare with overall profit margin
+    # (4) Metrics for selected items
+    st.write("### (4) Show three metrics for the selected items in (2): total sales, total profit, and overall profit margin (%)")
+    total_sales = df2['Sales'].sum()
+    total_profit = df2['Profit'].sum()
     overall_sales = df['Sales'].sum()
     overall_profit = df['Profit'].sum()
-    overall_margin = (overall_profit / overall_sales) * 100 if overall_sales != 0 else 0
-    delta_margin = profit_margin - overall_margin
 
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Total Sales", f"${total_sales:,.2f}")
-    col2.metric("Total Profit", f"${total_profit:,.2f}")
-    col3.metric("Profit Margin (%)", f"{profit_margin:.2f}%", delta=f"{delta_margin:.2f}%")
+    avg_margin_all = overall_profit / overall_sales if overall_sales else 0
+    avg_margin_selected = total_profit / total_sales if total_sales else 0
+    delta = avg_margin_selected - avg_margin_all
+
+    st.metric("Total Sales", f"${total_sales:,.2f}")
+    st.metric("Total Profit", f"${total_profit:,.2f}")
+    st.metric("Average Profit Margin", f"{avg_margin_selected:.2%}", delta=f"{delta:.2%}")
 else:
-    st.info("Please select at least one Sub-Category to view metrics and chart.")
+    st.warning("Please select at least one Sub-Category to display metrics and chart.")
+
+# (5) Notes on what was added
+st.write("## Your additions")
+st.write("### (1) add a drop down for Category (https://docs.streamlit.io/library/api-reference/widgets/st.selectbox)")
+st.write("### (2) add a multi-select for Sub_Category *in the selected Category (1)* (https://docs.streamlit.io/library/api-reference/widgets/st.multiselect)")
+st.write("### (3) show a line chart of sales for the selected items in (2)")
+st.write("### (4) show three metrics (https://docs.streamlit.io/library/api-reference/data/st.metric) for the selected items in (2): total sales, total profit, and overall profit margin (%)")
+st.write("### (5) use the delta option in the overall profit margin metric to show the difference between the overall average profit margin (all products across all categories)")
